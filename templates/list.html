@@ -11,50 +11,57 @@
     {% endblock %}
     {% block content %} 
     <!--선택 창-->
-    <select class="form-select" aria-label="Default select example">
-        <option selected>Select LED</option>
-        <option value="1">All</option>
-        <option value="2">Red</option>
-        <option value="3">Yellow</option>
-        <option value="4">Green</option>
+    <select class="form-select" id="pinSelect" onchange="if (this.value) window.location.href=this.value;">
+        <option value="default" id="default" selected>Select LED </option>
+        <option value="/list" id="1">All</option>
+        <option value="/list/Red" id="2">Red</option>
+        <option value="/list/Yellow" id="3">Yellow</option>
+        <option value="/list/Green" id="4">Green</option>
       </select>
     <!--DB 보여주는 리스트-->
     <table class="table table-hover">
-        <thead>
-          <tr>
-            <th scope="col">No.</th>
-            <th scope="col">Name</th>
-            <th scope="col">On Time</th>
-            <th scope="col">Off Time</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for i in dataList %}
-          <tr>
-              <th scope="row">{{ loop.index }}</th>
-              <td>{{ i[0] }}</td>
-              <td>{{ i[1] }}</td>
-              <td>{{ i[2] }}</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-      <hr/>
-      <nav aria-label="...">
-        <ul class="pagination justify-content-center">
-          <li class="page-item disabled">
-            <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Previous</a>
-          </li>
-          <li class="page-item active"><a class="page-link" href="/list">1</a></li>
-          <li class="page-item" aria-current="page">
-            <a class="page-link" href="#">2</a>
-          </li>
-          <li class="page-item"><a class="page-link" href="#">3</a></li>
-          <li class="page-item">
-            <a class="page-link" href="#">Next</a>
-          </li>
-        </ul>
-      </nav>
+      <thead>
+        <tr>
+          <th scope="col">No.</th>
+          <th scope="col">Name</th>
+          <th scope="col">On Time</th>
+          <th scope="col">Off Time</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for i in dataList %}
+        <tr>
+            <th scope="row">{{ loop.index }}</th>
+            <td>{{ i[0] }}</td>
+            <td>{{ i[1] }}</td>
+            <td>{{ i[2] }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <hr/>
+    <nav aria-label="...">
+      <ul class="pagination justify-content-center">
+        <li class="page-item disabled">
+          <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Previous</a>
+        </li>
+        <li class="page-item active"><a class="page-link" href="/list">1</a></li>
+        <li class="page-item" aria-current="page">
+          <a class="page-link" href="#">2</a>
+        </li>
+        <li class="page-item"><a class="page-link" href="#">3</a></li>
+        <li class="page-item">
+          <a class="page-link" href="#">Next</a>
+        </li>
+      </ul>
+    </nav>
     {% endblock %}
+
+    {% block style %}
+    <!--select option 클릭 시 이벤트-->
+    <script type="text/javascript">
+   
+  </script>
+		{% endblock %}
 </body>
 </html>    

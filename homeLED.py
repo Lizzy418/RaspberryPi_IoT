@@ -34,20 +34,52 @@ for pin in pins:
    GPIO.setup(pin, GPIO.OUT)
    GPIO.output(pin, GPIO.LOW)
 
-# LED 사용 시간 출력
+# LED 사용 시간 출력(오늘 기준)
 def usingLED():
-   Query = "SELECT Name, TIMESTAMPDIFF(MINUTE, onTime, offTime) AS TIMESTAMPDIFF from tLED"
+   #켜고 끈 시간이 모두 오늘인 경우
+   Query = "SELECT Name, TIMESTAMPDIFF(MINUTE, onTime, offTime) AS TIMESTAMPDIFF from tLED \
+   where DATE_FORMAT(offTime, '%Y-%m-%d') = CURDATE() \
+   AND DATE_FORMAT(onTime, '%Y-%m-%d') = CURDATE()"
    Cursor.execute(Query)
    tdataList = Cursor.fetchall()
+   #어제 켰는데 오늘 끈 경우(자정에 테스트 필요)
+   Query2 = "SELECT Name, TIMESTAMPDIFF(MINUTE, DATE_FORMAT(now(), '%Y-%m-%d 00:00:00'), offTime) AS TIMESTAMPDIFF from tLED \
+   where DATE_FORMAT(offTime, '%Y-%m-%d') = CURDATE() \
+   AND DATE_FORMAT(onTime, '%Y-%m-%d') = CURDATE() - INTERVAL 1 DAY"
+   Cursor.execute(Query2)
+   tdataList = tdataList + Cursor.fetchall()
    usingList = list()
    for pin in pins:
       total = 0
-      for i in tdataList:
-         if pins[pin]['name'] == i[0]:
+      for i in tdataList: #select한 데이터들 딕셔너리
+         if pins[pin]['name'] == i[0]: #이름이 같은 위치에다 더하기
             if i[1] != 0 and i[1]:
                total = total+i[1]
       usingList.append([pins[pin]['name'], total])
    return usingList
+
+#LED 사용 시간 출력(한달 기준)
+def usingLEDm():
+   #on/off 모두 이번달만 조회
+   Query = "SELECT Name, TIMESTAMPDIFF(MINUTE, onTime, offTime) AS TIMESTAMPDIFF from tLED \
+   where Month(offTime) = Month(now()) AND Month(onTime) = Month(now())"
+   Cursor.execute(Query)
+   tdataList = Cursor.fetchall()
+   #달 마지막에 on 해서 다음 달에 off 된 경우(테스트 필요)
+   Query2 = "SELECT Name, TIMESTAMPDIFF(MINUTE, DATE_FORMAT(now(), '%Y-%m-%d 00:00:00'), offTime) AS TIMESTAMPDIFF from tLED \
+   where Month(offTime) = Month(now()) \
+   AND Month(offTime) = Month(now()) - INTERVAL 1 MONTH"
+   Cursor.execute(Query2)
+   tdataList = tdataList + Cursor.fetchall()
+   usingList2 = list()
+   for pin in pins:
+      total = 0
+      for i in tdataList: #select한 데이터들 딕셔너리
+         if pins[pin]['name'] == i[0]: #이름이 같은 위치에다 더하기
+            if i[1] != 0 and i[1]:
+               total = total+i[1]
+      usingList2.append([pins[pin]['name'], total])
+   return usingList2
 
 # 웹서버의 URL 주소로 접근하면 아래의 main() 함수를 실행
 @app.route("/")
@@ -60,22 +92,24 @@ def main():
       'pins' : pins
       }
    # 업데이트 된 templateDate 값들을 homeLED.html로 리턴
-   return render_template('homeLED.html', **templateData, usingList = usingLED() )
+   return render_template('homeLED.html', **templateData, usingList = usingLED(), usingList2 = usingLEDm() )
 
-# led가 켜졌을 때 db에 저장(insert 조건 추가해야 함(새로고침해도 새로 추가되지 않게))
+# led가 켜졌을 때 db에 저장
 def insert_data(changePin):
    CheckTime = "SELECT onTime, offTime from tLED where Name=%s"
    Name = [ (pins[changePin]['name']) ]
    Cursor.execute(CheckTime, Name)
    cTime = Cursor.fetchall()
-   d = datetime.today().strftime('%Y-%m-%d %H:%M:%S')
+   d = datetime.today().strftime('%Y-%m-%d %H:%M:%S')    #현재시간
    Query = "INSERT INTO tLED(Name, onTime) VALUES(%s, %s)"
    Values = [
       ( pins[changePin]['name'], d )
    ]
+   #아예 처음 DB에 넣는 경우
    if not cTime :  
       Cursor.executemany(Query, Values)
       Maria.commit()
+   #off한 시간도 모두 들어가있는 경우(on만 데이터가 들어간 경우엔 새로 추가되지 않게)
    else:
       if cTime[-1][-1]:
          Cursor.executemany(Query, Values)
@@ -115,7 +149,7 @@ def action(changePin, action):
       'pins' : pins
    }
    # 업데이트 된 pinData 값들을 homeLED.html로 리턴
-   return render_template('homeLED.html', **pinData, usingList = usingLED() )
+   return render_template('homeLED.html', **pinData, usingList = usingLED(), usingList2 = usingLEDm() )
 
 #DB 리스트 웹페이지에 띄우기
 @app.route("/list")
@@ -125,6 +159,19 @@ def lists():
    dataList = Cursor.fetchall()
    #페이지 값 (디폴트 = 1)
    #page = request.args.get('page', type=int, default=1)
+   return render_template('list.html', dataList=dataList)
+
+@app.route("/list/<selectPin>")
+def selectPin(selectPin):
+   selectPin = str(selectPin)
+   if selectPin == "Red":
+      Query = "SELECT * from tLED where Name='Red LED'"
+   if selectPin == "Yellow":
+      Query = "SELECT * from tLED where Name='Yellow LED'"
+   if selectPin == "Green":
+      Query = "SELECT * from tLED where Name='Green LED'"
+   Cursor.execute(Query)
+   dataList = Cursor.fetchall()
    return render_template('list.html', dataList=dataList)
 
 @app.route("/about")

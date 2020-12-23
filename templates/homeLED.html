@@ -38,14 +38,51 @@
         <div class="col-sm">
           <div class="card text-center w-auto"> 
             <div class="card-body">
-              {{ i[0] }} 1일 사용 시간
-              <h5 class="card-title">
+              <h5>
+              {{ i[0] }} 오늘 하루 사용 시간
+              </h5>
+              <h4 class="card-title">
                 {% if i[1] > 60 %}
                   {{ i[1]//60 }} 시간 {{ i[1] % 60 }} 분
                 {% else %}
                   {{ i[1] }} 분
                 {% endif %}
-              </h5> 
+              </h4> 
+              <br>
+              <h5>
+              소비전력(30W 기준)
+              </h5>
+              <h4>
+              {{ (30 * i[1])//60 }} W
+              </h4> 
+            </div> 
+          </div>
+        </div> 
+        &nbsp; &nbsp; &nbsp;  
+      {% endfor %}
+    </div> <br>
+    <div class="row"> 
+      {% for i in usingList2 %}
+        <div class="col-sm">
+          <div class="card text-center w-auto"> 
+            <div class="card-body">
+              <h5>
+              {{ i[0] }} 이번 달 사용 시간
+              </h5>
+              <h4 class="card-title">
+                {% if i[1] > 60 %}
+                  {{ i[1]//60 }} 시간 {{ i[1] % 60 }} 분
+                {% else %}
+                  {{ i[1] }} 분
+                {% endif %}
+              </h4> 
+              <br>
+              <h5>
+              소비전력(30W 기준)
+              </h5>
+              <h4>
+              {{ (30 * i[1])//60 }} W
+              </h4> 
             </div> 
           </div>
         </div> 
