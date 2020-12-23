@@ -1,0 +1,11 @@
+body {font-size:100%;} 
+
+#but1 { background-color: mistyrose; }
+#but2 { background-color: honeydew; }
+
+h2 {color: #006699; }
+
+.footer {
+    text-align: center;
+    font-size: 0.8em;
+}

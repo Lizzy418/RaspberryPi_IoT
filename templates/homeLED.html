@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ko">
+  {% extends "layout.html" %}
+<head>
+  {% block extrahead %}
+  <!--토글 버튼 부트스트랩-->
+	<link href="//cdn.jsdelivr.net/gh/gitbrent/bootstrap4-toggle@3.4.0/css/bootstrap4-toggle.min.css" rel="stylesheet">  
+  <script src="//cdn.jsdelivr.net/gh/gitbrent/bootstrap4-toggle@3.4.0/js/bootstrap4-toggle.min.js"></script>
+  {% endblock %}
+</head>
+<body>
+  {% block header %}
+  <h2>My Home LED Control</h2>
+  {% endblock %}
+  {% block content %} 
+    <div class="row"> 
+      {% for pin in pins %}
+      <div class="col-sm">
+        <div class="card text-center w-auto"> 
+          <img src="{{ url_for('static', filename='img/'+pins[pin].name+'.png') }}" class="card-img-top" alt="LED"/>
+          <div class="card-body">
+            <h5 class="card-title">
+              {% if pins[pin].state == True %}
+                <input type="checkbox" data-toggle="toggle" id="{{pin}}" checked> &nbsp; {{ pins[pin].name }} 
+              {% else %}
+                <input type="checkbox" data-toggle="toggle" id="{{pin}}"> &nbsp; {{ pins[pin].name }} 
+              {% endif %}
+            </h5> 
+          </div> 
+        </div>
+      </div> 
+      &nbsp; &nbsp; &nbsp; 
+      {% endfor %}
+    </div> 
+    <br>
+    <div class="row"> 
+      {% for i in usingList %}
+        <div class="col-sm">
+          <div class="card text-center w-auto"> 
+            <div class="card-body">
+              {{ i[0] }} 1일 사용 시간
+              <h5 class="card-title">
+                {% if i[1] > 60 %}
+                  {{ i[1]//60 }} 시간 {{ i[1] % 60 }} 분
+                {% else %}
+                  {{ i[1] }} 분
+                {% endif %}
+              </h5> 
+            </div> 
+          </div>
+        </div> 
+        &nbsp; &nbsp; &nbsp;  
+      {% endfor %}
+    </div>
+
+    <!--버튼 클릭 시 이벤트-->
+    {% for pin in pins %}
+    <script type="text/javascript">
+      $(function(){
+        $("#{{pin}}").on('change', function(){
+          if($("#{{pin}}").prop('checked')==true)
+            window.location.href="/{{pin}}/on";
+          else
+            window.location.href="/{{pin}}/off";
+        })
+      })
+    </script>
+    {% endfor %}
+  
+  {% endblock %}
+</body>
+</html>    
