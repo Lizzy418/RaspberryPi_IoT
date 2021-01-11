@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="ko">
-    {% extends "layout.html" %}
+  {% extends "layout.html" %}
 <head>
-    {% block extrahead %}
+  {% block extrahead %}
 	{% endblock %}
 </head>
 <body>
@@ -31,37 +31,28 @@
       <tbody>
         {% for i in dataList %}
         <tr>
+            {% if loop.index >= 1 + pagination.skip and loop.index <= 10 + pagination.skip %}
             <th scope="row">{{ loop.index }}</th>
             <td>{{ i[0] }}</td>
             <td>{{ i[1] }}</td>
             <td>{{ i[2] }}</td>
+            {% endif %}
         </tr>
         {% endfor %}
       </tbody>
     </table>
     <hr/>
-    <nav aria-label="...">
-      <ul class="pagination justify-content-center">
-        <li class="page-item disabled">
-          <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Previous</a>
-        </li>
-        <li class="page-item active"><a class="page-link" href="/list">1</a></li>
-        <li class="page-item" aria-current="page">
-          <a class="page-link" href="#">2</a>
-        </li>
-        <li class="page-item"><a class="page-link" href="#">3</a></li>
-        <li class="page-item">
-          <a class="page-link" href="#">Next</a>
-        </li>
-      </ul>
-    </nav>
+      {{ pagination.links }}
+   
+   
+    
     {% endblock %}
 
     {% block style %}
     <!--select option 클릭 시 이벤트-->
     <script type="text/javascript">
    
-  </script>
+    </script>
 		{% endblock %}
 </body>
 </html>    

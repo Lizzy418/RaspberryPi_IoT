@@ -4,6 +4,7 @@
 import RPi.GPIO as GPIO
 from flask import Flask, render_template, request
 from flask_bootstrap import Bootstrap
+from flask_paginate import Pagination, get_page_parameter
 # import mysql.connector
 import pymysql
 from datetime import datetime
@@ -40,14 +41,16 @@ def usingLED():
    Query = "SELECT Name, TIMESTAMPDIFF(MINUTE, onTime, offTime) AS TIMESTAMPDIFF from tLED \
    where DATE_FORMAT(offTime, '%Y-%m-%d') = CURDATE() \
    AND DATE_FORMAT(onTime, '%Y-%m-%d') = CURDATE()"
-   Cursor.execute(Query)
-   tdataList = Cursor.fetchall()
+   if Query != "" :
+      Cursor.execute(Query)
+      tdataList = Cursor.fetchall()
    #어제 켰는데 오늘 끈 경우(자정에 테스트 필요)
    Query2 = "SELECT Name, TIMESTAMPDIFF(MINUTE, DATE_FORMAT(now(), '%Y-%m-%d 00:00:00'), offTime) AS TIMESTAMPDIFF from tLED \
    where DATE_FORMAT(offTime, '%Y-%m-%d') = CURDATE() \
    AND DATE_FORMAT(onTime, '%Y-%m-%d') = CURDATE() - INTERVAL 1 DAY"
-   Cursor.execute(Query2)
-   tdataList = tdataList + Cursor.fetchall()
+   if Query2 != "" :
+      Cursor.execute(Query2)
+      tdataList = tdataList + Cursor.fetchall()
    usingList = list()
    for pin in pins:
       total = 0
@@ -63,14 +66,16 @@ def usingLEDm():
    #on/off 모두 이번달만 조회
    Query = "SELECT Name, TIMESTAMPDIFF(MINUTE, onTime, offTime) AS TIMESTAMPDIFF from tLED \
    where Month(offTime) = Month(now()) AND Month(onTime) = Month(now())"
-   Cursor.execute(Query)
-   tdataList = Cursor.fetchall()
+   if Query != "" :
+      Cursor.execute(Query)
+      tdataList = Cursor.fetchall()
    #달 마지막에 on 해서 다음 달에 off 된 경우(테스트 필요)
    Query2 = "SELECT Name, TIMESTAMPDIFF(MINUTE, DATE_FORMAT(now(), '%Y-%m-%d 00:00:00'), offTime) AS TIMESTAMPDIFF from tLED \
    where Month(offTime) = Month(now()) \
    AND Month(offTime) = Month(now()) - INTERVAL 1 MONTH"
-   Cursor.execute(Query2)
-   tdataList = tdataList + Cursor.fetchall()
+   if Query2 != "" :
+      Cursor.execute(Query2)
+      tdataList = tdataList + Cursor.fetchall()
    usingList2 = list()
    for pin in pins:
       total = 0
@@ -152,14 +157,19 @@ def action(changePin, action):
    return render_template('homeLED.html', **pinData, usingList = usingLED(), usingList2 = usingLEDm() )
 
 #DB 리스트 웹페이지에 띄우기
-@app.route("/list")
+@app.route("/list/")
 def lists():
    Query = "SELECT * from tLED"
    Cursor.execute(Query)
    dataList = Cursor.fetchall()
    #페이지 값 (디폴트 = 1)
-   #page = request.args.get('page', type=int, default=1)
-   return render_template('list.html', dataList=dataList)
+   page = request.args.get(get_page_parameter(), type=int, default=1)
+   search = False
+   q = request.args.get('q')
+   if q:
+      search = True
+   pagination = Pagination(page=page, total=len(dataList), search = search, per_page=10, css_framework='bootstrap4')
+   return render_template('list.html', dataList=dataList, pagination=pagination)
 
 @app.route("/list/<selectPin>")
 def selectPin(selectPin):
@@ -172,7 +182,14 @@ def selectPin(selectPin):
       Query = "SELECT * from tLED where Name='Green LED'"
    Cursor.execute(Query)
    dataList = Cursor.fetchall()
-   return render_template('list.html', dataList=dataList)
+   #페이지 값 (디폴트 = 1)
+   page = request.args.get(get_page_parameter(), type=int, default=1)
+   search = False
+   q = request.args.get('q')
+   if q:
+      search = True
+   pagination = Pagination(page=page, total=len(dataList), search = search, per_page=10, css_framework='bootstrap4')
+   return render_template('list.html', dataList=dataList, pagination=pagination)
 
 @app.route("/about")
 def about():

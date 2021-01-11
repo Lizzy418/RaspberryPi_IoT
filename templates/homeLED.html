@@ -6,6 +6,7 @@
   <!--토글 버튼 부트스트랩-->
 	<link href="//cdn.jsdelivr.net/gh/gitbrent/bootstrap4-toggle@3.4.0/css/bootstrap4-toggle.min.css" rel="stylesheet">  
   <script src="//cdn.jsdelivr.net/gh/gitbrent/bootstrap4-toggle@3.4.0/js/bootstrap4-toggle.min.js"></script>
+  <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
   {% endblock %}
 </head>
 <body>
@@ -13,97 +14,233 @@
   <h2>My Home LED Control</h2>
   {% endblock %}
   {% block content %} 
-    <div class="row"> 
-      {% for pin in pins %}
+  <!-- LED 이미지와 버튼 -->
+  <div class="row"> 
+    {% for pin in pins %}
+    <div class="col-sm">
+      <div class="card text-center w-auto"> 
+        <img src="{{ url_for('static', filename='img/'+pins[pin].name+'.png') }}" class="card-img-top" alt="LED"/>
+        <div class="card-body">
+          <h5 class="card-title">
+            {% if pins[pin].state == True %}
+              <input type="checkbox" data-toggle="toggle" id="{{pin}}" checked> &nbsp; {{ pins[pin].name }} 
+            {% else %}
+              <input type="checkbox" data-toggle="toggle" id="{{pin}}"> &nbsp; {{ pins[pin].name }} 
+            {% endif %}
+          </h5> 
+        </div> 
+      </div>
+    </div> 
+    &nbsp; &nbsp; &nbsp; 
+    {% endfor %}
+  </div> 
+  <br>
+  <!-- 오늘 하루 사용 시간 -->
+  <div class="row"> 
+    {% for i in usingList %}
       <div class="col-sm">
         <div class="card text-center w-auto"> 
-          <img src="{{ url_for('static', filename='img/'+pins[pin].name+'.png') }}" class="card-img-top" alt="LED"/>
           <div class="card-body">
-            <h5 class="card-title">
-              {% if pins[pin].state == True %}
-                <input type="checkbox" data-toggle="toggle" id="{{pin}}" checked> &nbsp; {{ pins[pin].name }} 
+            <h5 class="useTimeTitle">
+            {{ i[0] }} 오늘 하루 사용 시간
+            </h5>
+            <h4 class="card-title" id="useTime">
+              {% if i[1] > 60 %}
+                {{ i[1]//60 }} 시간 {{ i[1] % 60 }} 분
               {% else %}
-                <input type="checkbox" data-toggle="toggle" id="{{pin}}"> &nbsp; {{ pins[pin].name }} 
+                {{ i[1] }} 분
               {% endif %}
-            </h5> 
+            </h4> 
+            <br>
+            <h5 class="useTimeTitle">
+            소비전력(30W 기준)
+            </h5>
+            <h4 id="useTime">
+            {{ (30 * i[1])//60 }} W
+            </h4> 
           </div> 
         </div>
       </div> 
-      &nbsp; &nbsp; &nbsp; 
-      {% endfor %}
-    </div> 
-    <br>
-    <div class="row"> 
-      {% for i in usingList %}
-        <div class="col-sm">
-          <div class="card text-center w-auto"> 
-            <div class="card-body">
-              <h5>
-              {{ i[0] }} 오늘 하루 사용 시간
-              </h5>
-              <h4 class="card-title">
-                {% if i[1] > 60 %}
-                  {{ i[1]//60 }} 시간 {{ i[1] % 60 }} 분
-                {% else %}
-                  {{ i[1] }} 분
-                {% endif %}
-              </h4> 
-              <br>
-              <h5>
-              소비전력(30W 기준)
-              </h5>
-              <h4>
-              {{ (30 * i[1])//60 }} W
-              </h4> 
-            </div> 
-          </div>
-        </div> 
-        &nbsp; &nbsp; &nbsp;  
-      {% endfor %}
-    </div> <br>
-    <div class="row"> 
-      {% for i in usingList2 %}
-        <div class="col-sm">
-          <div class="card text-center w-auto"> 
-            <div class="card-body">
-              <h5>
-              {{ i[0] }} 이번 달 사용 시간
-              </h5>
-              <h4 class="card-title">
-                {% if i[1] > 60 %}
-                  {{ i[1]//60 }} 시간 {{ i[1] % 60 }} 분
-                {% else %}
-                  {{ i[1] }} 분
-                {% endif %}
-              </h4> 
-              <br>
-              <h5>
-              소비전력(30W 기준)
-              </h5>
-              <h4>
-              {{ (30 * i[1])//60 }} W
-              </h4> 
-            </div> 
-          </div>
-        </div> 
-        &nbsp; &nbsp; &nbsp;  
-      {% endfor %}
-    </div>
-
-    <!--버튼 클릭 시 이벤트-->
-    {% for pin in pins %}
-    <script type="text/javascript">
-      $(function(){
-        $("#{{pin}}").on('change', function(){
-          if($("#{{pin}}").prop('checked')==true)
-            window.location.href="/{{pin}}/on";
-          else
-            window.location.href="/{{pin}}/off";
-        })
-      })
-    </script>
+      &nbsp; &nbsp; &nbsp;  
     {% endfor %}
+  </div> <br>
   
+  <!-- chart가 생성될 공간 -->
+  <div id="bar_chart_div"></div>
+  
+  <!-- 이번 달 사용 시간 -->
+  <div class="row"> 
+    {% for i in usingList2 %}
+      <div class="col-sm">
+        <div class="card text-center w-auto"> 
+          <div class="card-body">
+            <h5 class="useTimeTitle">
+            {{ i[0] }} 이번 달 사용 시간
+            </h5>
+            <h4 class="card-title" id="useTime">
+              {% if i[1] > 60 %}
+                {{ i[1]//60 }} 시간 {{ i[1] % 60 }} 분
+              {% else %}
+                {{ i[1] }} 분
+              {% endif %}
+            </h4> 
+            <br>
+            <h5 class="useTimeTitle">
+            소비전력(30W 기준)
+            </h5>
+            <h4 id="useTime">
+            {{ (30 * i[1])//60 }} W
+            </h4> 
+          </div> 
+        </div>
+      </div> 
+      &nbsp; &nbsp; &nbsp;  
+    {% endfor %}
+  </div>
+  <br>
+  
+  <!-- chart가 생성될 공간 -->
+  <div id="bar_chart_div2"></div>
+  {% endblock %}
+
+  {% block style %}
+  <!--버튼 클릭 시 이벤트-->
+  {% for pin in pins %}
+  <script type="text/javascript">
+    $(function(){
+      $("#{{pin}}").on('change', function(){
+        if($("#{{pin}}").prop('checked')==true)
+          window.location.href="/{{pin}}/on";
+        else
+          window.location.href="/{{pin}}/off";
+      })
+    })
+  </script>
+  {% endfor %}
+
+  <!-- chart가 생성 -->
+  <script>
+    google.charts.load('current', {'packages':['bar','corechart']});
+
+    //날짜 
+    let today = new Date();   
+    let year = today.getFullYear(); // 년도
+    let month = today.getMonth() + 1;  // 월
+    let date = today.getDate();  // 날짜
+
+    //데이터
+    var dataRed = Math.round(parseFloat("{{usingList[0][1]/60}}")*100)/100;
+    var dataYellow = Math.round(parseFloat("{{usingList[1][1]/60}}")*100)/100;
+    var dataGreen = Math.round(parseFloat("{{usingList[2][1]/60}}")*100)/100;
+
+    function schedulerSuccessAndFailChart() {
+      var data = google.visualization.arrayToDataTable([
+        ["Title","Red", {role:'annotation'}, "Yellow", {role:'annotation'}, "Green", {role:'annotation'}],
+        [""
+        ,dataRed, dataRed
+        ,dataYellow, dataYellow
+        ,dataGreen, dataGreen
+        ] 
+      ]);
+
+      var barChartOption = {
+        title: year + '년 ' + month + '월 ' + date + '일 사용시간',
+        bars: 'vertical',
+        height :400,
+        width :'100%',
+        legend: { position: "top" },
+        isStacked: false,
+        tooltip:{textStyle : {fontSize:12}, showColorCode : true},
+        series: { // 선색
+          0: { color: '#B74F4F' },
+          1: { color: '#E0C430' },
+          2: { color: '#A1C057' }
+        },
+        animation: { //차트가 뿌려질때 실행될 애니메이션 효과
+          startup: true,
+          duration: 1000,
+          easing: 'linear' },
+        annotation: {
+          textStyle: {
+            fontSize: 15,
+            bold: true,
+            italic: true,
+            color: '#871b47',
+            auraColor: '#d799ae',
+            opacity: 0.8
+          }
+        }
+      };
+      var chart = new google.visualization.BarChart(document.getElementById('bar_chart_div'));
+      chart.draw(data, barChartOption);
+      //반응형 그래프 출력
+      window.addEventListener('resize', function() { chart.draw(data, barChartOption); }, false);
+    }
+  google.charts.setOnLoadCallback(schedulerSuccessAndFailChart);
+  </script>
+
+  <!-- chart가 생성 -->
+  <script>
+    google.charts.load('current', {'packages':['bar','corechart']});
+    var dataRed2 = Math.round(parseFloat("{{usingList2[0][1]/60}}")*100)/100;
+    var dataYellow2 = Math.round(parseFloat("{{usingList2[1][1]/60}}")*100)/100;
+    var dataGreen2 = Math.round(parseFloat("{{usingList2[2][1]/60}}")*100)/100;
+
+    function schedulerSuccessAndFailChart() {
+      var data = google.visualization.arrayToDataTable([
+        ["Title","Red", {role:'annotation'}, "Yellow", {role:'annotation'}, "Green", {role:'annotation'}],
+        [""
+        ,dataRed2, dataRed2
+        ,dataYellow2, dataYellow2
+        ,dataGreen2, dataGreen2
+        ] 
+      ]);
+
+      var barChartOption = {
+        title: year + '년 ' + month + '월 사용시간',
+        bars: 'vertical',
+        height :400,
+        width :'100%',
+        legend: { position: "top" },
+        isStacked: false,
+        tooltip:{textStyle : {fontSize:12}, showColorCode : true},
+        series: { // 선색
+          0: { color: '#B74F4F' },
+          1: { color: '#E0C430' },
+          2: { color: '#A1C057' }
+        },
+        animation: { //차트가 뿌려질때 실행될 애니메이션 효과
+          startup: true,
+          duration: 1000,
+          easing: 'linear' },
+        annotation: {
+          textStyle: {
+            fontSize: 15,
+            bold: true,
+            italic: true,
+            color: '#871b47',
+            auraColor: '#d799ae',
+            opacity: 0.8
+          }
+        }
+      };
+      var chart = new google.visualization.BarChart(document.getElementById('bar_chart_div2'));
+      chart.draw(data, barChartOption);
+      //반응형 그래프 출력
+      window.addEventListener('resize', function() { chart.draw(data, barChartOption); }, false);
+    }
+  google.charts.setOnLoadCallback(schedulerSuccessAndFailChart);
+  </script>
+
+  <style>
+    .useTimeTitle {
+      font-weight: bold;
+      color: #474747;
+    }
+    #useTime {
+      color: #4d85b9;
+    }
+  </style>
   {% endblock %}
 </body>
 </html>    
